@@ -1,0 +1,6 @@
+{
+  "name": "FIA Islamabad Zone - Performance Evaluation & Records CMS",
+  "description": "Comprehensive law enforcement personnel performance evaluation, daily duty roster, ACR/PER docket generator, and statistical records management system for FIA Islamabad Zone.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
