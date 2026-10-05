@@ -11,8 +11,11 @@ import {
   FileCheck, 
   Sparkles, 
   ArrowUpRight,
-  Filter
+  Filter,
+  Printer,
+  FileDown
 } from 'lucide-react';
+import { downloadRosterPdf } from '../utils/printDocket';
 
 interface DailyDutyRosterProps {
   tasks: OfficerTask[];
@@ -43,6 +46,18 @@ export const DailyDutyRoster: React.FC<DailyDutyRosterProps> = ({
     return matchesStatus && matchesPriority;
   });
 
+  const handlePrintRoster = () => {
+    try {
+      window.print();
+    } catch (e) {
+      downloadRosterPdf(tasks, activities, officers);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    downloadRosterPdf(tasks, activities, officers);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -60,7 +75,23 @@ export const DailyDutyRoster: React.FC<DailyDutyRosterProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadPdf}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-700/60 rounded transition-colors whitespace-nowrap cursor-pointer"
+            title="Download Roster PDF"
+          >
+            <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+            <span>PDF Roster</span>
+          </button>
+          <button
+            onClick={handlePrintRoster}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors whitespace-nowrap cursor-pointer"
+            title="Print Daily Duty Roster"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-400" />
+            <span>Print Roster</span>
+          </button>
           <button
             onClick={onOpenLogActivityModal}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors whitespace-nowrap"

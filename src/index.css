@@ -6,22 +6,123 @@
   }
 }
 
+/* HIGH-PRECISION PRINT STYLES FOR OFFICIAL FIA DOCKETS & REPORTS */
 @media print {
-  body {
-    background-color: white !important;
-    color: black !important;
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
   }
-  header, nav, button, footer, .no-print {
+
+  /* Force light background and dark text for clean, legible printing */
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide app navigation, header, tabs, buttons, footers */
+  header,
+  nav,
+  button,
+  footer,
+  .no-print,
+  [data-no-print="true"] {
     display: none !important;
   }
-  .max-w-7xl {
+
+  /* Unconstrain page width */
+  .max-w-7xl,
+  main {
     max-width: 100% !important;
+    margin: 0 !important;
     padding: 0 !important;
+    border: none !important;
   }
-  * {
-    color: black !important;
-    background: transparent !important;
-    border-color: #cbd5e1 !important;
+
+  /* Make sure printable docket retains clean contrast and borders */
+  .printable-docket {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #94a3b8 !important;
+    border-radius: 4px !important;
     box-shadow: none !important;
+  }
+
+  .printable-docket * {
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  .printable-docket .bg-slate-950,
+  .printable-docket .bg-slate-900 {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  .printable-docket .text-white,
+  .printable-docket .text-slate-100,
+  .printable-docket .text-slate-200 {
+    color: #0f172a !important;
+  }
+
+  .printable-docket .text-slate-400,
+  .printable-docket .text-slate-500 {
+    color: #475569 !important;
+  }
+
+  .printable-docket .text-amber-400,
+  .printable-docket .text-amber-300 {
+    color: #b45309 !important;
+  }
+
+  .printable-docket .text-emerald-400 {
+    color: #047857 !important;
+  }
+
+  .printable-docket .text-cyan-400 {
+    color: #0369a1 !important;
+  }
+
+  .printable-docket .text-purple-400 {
+    color: #6b21a8 !important;
+  }
+
+  .printable-docket .border-slate-800,
+  .printable-docket .border-slate-700,
+  .printable-docket .border-slate-850 {
+    border-color: #cbd5e1 !important;
+  }
+
+  .printable-docket .bg-emerald-950\/20 {
+    background-color: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+  }
+
+  .printable-docket .bg-rose-950\/20 {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+  }
+
+  .printable-docket .bg-amber-950\/20 {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+  }
+
+  .printable-docket .bg-slate-900\/80,
+  .printable-docket .bg-slate-900\/60,
+  .printable-docket .bg-slate-950\/80 {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Prevent page cuts in the middle of sections or signatures */
+  .break-inside-avoid,
+  .printable-docket > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

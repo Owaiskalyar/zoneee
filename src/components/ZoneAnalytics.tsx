@@ -32,7 +32,8 @@ import {
   AlertTriangle,
   Download,
   TableProperties,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Printer
 } from 'lucide-react';
 
 interface ZoneAnalyticsProps {
@@ -256,24 +257,42 @@ export const ZoneAnalytics: React.FC<ZoneAnalyticsProps> = ({ officers }) => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGenerateBrief}
-          disabled={isGeneratingBrief}
-          className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-md transition-colors disabled:opacity-50 whitespace-nowrap shadow"
-        >
-          {isGeneratingBrief ? (
-            <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Generating AI Executive Brief...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Generate AI Strategic Brief</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                window.print();
+              } catch (e) {
+                console.warn('Print blocked by sandbox');
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md transition-colors whitespace-nowrap cursor-pointer"
+            title="Print Zone Performance Analytics"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-400" />
+            <span>Print Report</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGenerateBrief}
+            disabled={isGeneratingBrief}
+            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-md transition-colors disabled:opacity-50 whitespace-nowrap shadow"
+          >
+            {isGeneratingBrief ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Generating AI Brief...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Generate AI Strategic Brief</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Navigation Sub-Tabs */}

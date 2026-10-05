@@ -145,10 +145,11 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onTriggerSecurityLock}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
-            title="Lock Console (Privacy Security PIN)"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/90 hover:bg-slate-800 border border-slate-700 rounded-md transition-colors cursor-pointer"
+            title="Lock Console with Security Authentication PIN"
           >
-            <Lock className="w-4 h-4" />
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Lock Console</span>
           </button>
         </div>
       </div>

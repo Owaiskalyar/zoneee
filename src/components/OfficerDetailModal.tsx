@@ -12,8 +12,10 @@ import {
   formatPercent, 
   formatDateTime, 
   getCadreDisplayName, 
-  recalculateOfficerMetrics 
+  recalculateOfficerMetrics,
+  calculateCadreAcrScore
 } from '../utils/formatters';
+import { downloadAcrPdf } from '../utils/printDocket';
 import { 
   X, 
   Award, 
@@ -25,7 +27,9 @@ import {
   ThumbsUp, 
   HelpCircle, 
   Star,
-  Activity
+  Activity,
+  Printer,
+  FileDown
 } from 'lucide-react';
 
 interface OfficerDetailModalProps {
@@ -163,7 +167,19 @@ export const OfficerDetailModal: React.FC<OfficerDetailModalProps> = ({
               </span>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const fallback = calculateCadreAcrScore(officer);
+                  downloadAcrPdf(officer, null, fallback);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-700/60 rounded transition-colors"
+                title="Download Official Record PDF"
+              >
+                <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Export PDF</span>
+              </button>
               <button
                 type="button"
                 onClick={() => onGenerateAcr(officer)}

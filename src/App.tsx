@@ -69,6 +69,25 @@ export default function App() {
   const [modalTargetOfficer, setModalTargetOfficer] = useState<Officer | undefined>(undefined);
   
   const [isConsoleLocked, setIsConsoleLocked] = useState(false);
+  const [authPin, setAuthPin] = useState<string>(() => {
+    try {
+      return localStorage.getItem('fia_auth_pin') || '1974';
+    } catch {
+      return '1974';
+    }
+  });
+
+  const handleUpdateAuthPin = (newPin: string) => {
+    setAuthPin(newPin);
+    try {
+      localStorage.setItem('fia_auth_pin', newPin);
+    } catch (e) {}
+    addAuditEntry(
+      'SECURITY_PIN_UPDATE',
+      'System Console',
+      `Console Authentication PIN updated to custom ${newPin.length}-character security credential.`
+    );
+  };
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<any>(null);
 
@@ -232,7 +251,11 @@ export default function App() {
       
       {/* Privacy Lock Barrier */}
       {isConsoleLocked && (
-        <SecurityPinModal onUnlock={() => setIsConsoleLocked(false)} />
+        <SecurityPinModal 
+          onUnlock={() => setIsConsoleLocked(false)}
+          currentPin={authPin}
+          onUpdatePin={handleUpdateAuthPin}
+        />
       )}
 
       {/* Main Top Navigation Header */}
@@ -317,6 +340,8 @@ export default function App() {
           <SecurityAuditView
             auditLogs={auditLogs}
             onLockConsole={() => setIsConsoleLocked(true)}
+            currentPin={authPin}
+            onUpdatePin={handleUpdateAuthPin}
           />
         )}
 
