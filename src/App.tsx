@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Officer, OfficerTask, DailyActivityLog, AuditLogEntry } from './types';
+import { Officer, OfficerTask, DailyActivityLog, AuditLogEntry, CircleDefinition } from './types';
 import { 
   INITIAL_OFFICERS, 
   INITIAL_TASKS, 
   INITIAL_ACTIVITY_LOGS, 
-  INITIAL_AUDIT_LOGS 
+  INITIAL_AUDIT_LOGS,
+  INITIAL_CIRCLES
 } from './data/initialData';
 import { Header } from './components/Header';
 import { OfficerDirectory } from './components/OfficerDirectory';
@@ -14,6 +15,7 @@ import { AcrStudio } from './components/AcrStudio';
 import { ZoneAnalytics } from './components/ZoneAnalytics';
 import { HqIntegrationStation } from './components/HqIntegrationStation';
 import { SecurityAuditView } from './components/SecurityAuditView';
+import { CircleManagementView } from './components/CircleManagementView';
 import { NewOfficerModal } from './components/NewOfficerModal';
 import { TaskAssignmentModal } from './components/TaskAssignmentModal';
 import { DailyActivityModal } from './components/DailyActivityModal';
@@ -55,6 +57,15 @@ export default function App() {
       return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
     } catch {
       return INITIAL_AUDIT_LOGS;
+    }
+  });
+
+  const [circles, setCircles] = useState<CircleDefinition[]>(() => {
+    try {
+      const saved = localStorage.getItem('fia_isb_circles');
+      return saved ? JSON.parse(saved) : INITIAL_CIRCLES;
+    } catch {
+      return INITIAL_CIRCLES;
     }
   });
 
@@ -116,6 +127,12 @@ export default function App() {
     } catch (e) {}
   }, [auditLogs]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('fia_isb_circles', JSON.stringify(circles));
+    } catch (e) {}
+  }, [circles]);
+
   // Helper to log audit event
   const addAuditEntry = (action: string, targetOfficer: string, details: string) => {
     const newEntry: AuditLogEntry = {
@@ -127,6 +144,146 @@ export default function App() {
       details,
     };
     setAuditLogs((prev) => [newEntry, ...prev]);
+  };
+
+  // Circle Management Handlers
+  const handleAddCircle = (newCircle: CircleDefinition) => {
+    setCircles((prev) => [newCircle, ...prev]);
+    addAuditEntry(
+      'CIRCLE_REGISTERED',
+      'Zonal Command HQ',
+      `New operational circle "${newCircle.name}" (${newCircle.code}) created under ${newCircle.securityClassification} protocol.`
+    );
+  };
+
+  const handleUpdateCircle = (updatedCircle: CircleDefinition) => {
+    const existing = circles.find((c) => c.id === updatedCircle.id);
+    setCircles((prev) => prev.map((c) => (c.id === updatedCircle.id ? updatedCircle : c)));
+    
+    // If circle name changed, update officers currently in that circle
+    if (existing && existing.name !== updatedCircle.name) {
+      setOfficers((prev) =>
+        prev.map((o) => (o.circle === existing.name ? { ...o, circle: updatedCircle.name } : o))
+      );
+      setTasks((prev) =>
+        prev.map((t) => (t.circle === existing.name ? { ...t, circle: updatedCircle.name } : t))
+      );
+    }
+
+    addAuditEntry(
+      'CIRCLE_MODIFIED',
+      'Zonal Command HQ',
+      `Circle specifications updated for "${updatedCircle.name}" (Incharge: ${updatedCircle.inchargeName}).`
+    );
+  };
+
+  const handleDeleteCircle = (circleId: string, reassignToCircleName?: string) => {
+    const circleToDelete = circles.find((c) => c.id === circleId);
+    if (!circleToDelete) return;
+
+    if (reassignToCircleName) {
+      setOfficers((prev) =>
+        prev.map((o) => (o.circle === circleToDelete.name ? { ...o, circle: reassignToCircleName } : o))
+      );
+      setTasks((prev) =>
+        prev.map((t) => (t.circle === circleToDelete.name ? { ...t, circle: reassignToCircleName } : t))
+      );
+    }
+
+    setCircles((prev) => prev.filter((c) => c.id !== circleId));
+    addAuditEntry(
+      'CIRCLE_DECOMMISSIONED',
+      'Zonal Command HQ',
+      `Operational circle "${circleToDelete.name}" decommissioned. Active personnel reassigned to "${reassignToCircleName || 'General Reserve'}".`
+    );
+  };
+
+  const handleTransferOfficer = (officerId: string, targetCircleName: string) => {
+    const targetOfficer = officers.find((o) => o.id === officerId);
+    if (!targetOfficer) return;
+
+    const oldCircle = targetOfficer.circle;
+    setOfficers((prev) =>
+      prev.map((o) => (o.id === officerId ? { ...o, circle: targetCircleName } : o))
+    );
+    setTasks((prev) =>
+      prev.map((t) => (t.officerId === officerId ? { ...t, circle: targetCircleName } : t))
+    );
+
+    addAuditEntry(
+      'OFFICER_CIRCLE_TRANSFER',
+      `${targetOfficer.name} (${targetOfficer.badgeNo})`,
+      `Personnel reassigned from "${oldCircle}" to "${targetCircleName}". Service dossier preserved.`
+    );
+  };
+
+  const handleDesignateIncharge = (circleId: string, officer: Officer) => {
+    const targetCircle = circles.find((c) => c.id === circleId);
+    if (!targetCircle) return;
+
+    const updatedCircle: CircleDefinition = {
+      ...targetCircle,
+      inchargeName: `${officer.name} (${officer.rank})`,
+      inchargeRank: officer.rank,
+      inchargeOfficerId: officer.id,
+    };
+
+    setCircles((prev) => prev.map((c) => (c.id === circleId ? updatedCircle : c)));
+    addAuditEntry(
+      'INCHARGE_APPOINTMENT',
+      `${officer.name} (${officer.badgeNo})`,
+      `Officially designated as Circle Incharge of "${targetCircle.name}".`
+    );
+  };
+
+  const handleAddNewOfficerToCircle = (partialOfficer: Partial<Officer>) => {
+    const newOfficer: Officer = {
+      id: `off-${Date.now()}`,
+      srNo: officers.length + 1,
+      name: partialOfficer.name || 'New Officer',
+      badgeNo: partialOfficer.badgeNo || `FIA-${Date.now().toString().slice(-4)}`,
+      beltNo: partialOfficer.beltNo || 'ISB-NEW',
+      cadre: partialOfficer.cadre || 'INVESTIGATION',
+      rank: partialOfficer.rank || 'Inspector',
+      circle: partialOfficer.circle || circles[0]?.name || 'Anti-Corruption Circle (ACC)',
+      phone: partialOfficer.phone || '+92 300 0000000',
+      cnic: partialOfficer.cnic || '61101-0000000-0',
+      postingDuration: partialOfficer.postingDuration || 'Newly Deployed',
+      status: 'Active Duty',
+      lastUpdated: new Date().toISOString(),
+      acrScore: 72,
+      acrGrade: 'Good',
+      metrics: {
+        enquiriesAssigned: 10,
+        enquiriesClosed: 7,
+        enquiriesMerged: 1,
+        casesFirRegistered: 4,
+        challansSubmitted: 3,
+        pendingCases: 2,
+        accusedArrested: 6,
+        casesDecidedInCourt: 3,
+        convictionsObtained: 2,
+        totalRecoveriesPkr: 5000000,
+        violationsShowcausesIssued: 0,
+        appreciationsReceived: 1,
+        explanationsCalled: 0,
+        participationInGoodWork: 1,
+        disposalRate: 0.70,
+        challanRate: 0.75,
+        convictionRate: 0.67,
+        conductRecognitionIndex: 75,
+        weightedScore: 72.0,
+        overallGradeRemarks: 'Good',
+      } as any,
+    };
+
+    const computed = recalculateOfficerMetrics(newOfficer);
+    setOfficers((prev) => [computed, ...prev]);
+    addAuditEntry(
+      'CIRCLE_PERSONNEL_DEPLOYMENT',
+      `${computed.name} (${computed.badgeNo})`,
+      `Deployed directly to ${computed.circle} as ${computed.rank}.`
+    );
   };
 
   // Update Officer Metrics on real-life day-to-day base
@@ -280,6 +437,7 @@ export default function App() {
         {activeTab === 'officers' && (
           <OfficerDirectory
             officers={officers}
+            circles={circles}
             onSelectOfficer={(officer) => setSelectedOfficerForDetail(officer)}
             onOpenNewOfficerModal={() => setIsNewOfficerModalOpen(true)}
             onGenerateAcr={(officer) => {
@@ -289,7 +447,23 @@ export default function App() {
           />
         )}
 
-        {/* TAB 2: Daily Activity & Duty Roster */}
+        {/* TAB 2: Circle Wings & Command Hierarchy Customization */}
+        {activeTab === 'circles' && (
+          <CircleManagementView
+            circles={circles}
+            officers={officers}
+            onAddCircle={handleAddCircle}
+            onUpdateCircle={handleUpdateCircle}
+            onDeleteCircle={handleDeleteCircle}
+            onTransferOfficer={handleTransferOfficer}
+            onDesignateIncharge={handleDesignateIncharge}
+            onAddNewOfficerToCircle={handleAddNewOfficerToCircle}
+            onViewOfficerDetail={(officer) => setSelectedOfficerForDetail(officer)}
+            authPin={authPin}
+          />
+        )}
+
+        {/* TAB 3: Daily Activity & Duty Roster */}
         {activeTab === 'roster' && (
           <DailyDutyRoster
             tasks={tasks}
@@ -308,7 +482,7 @@ export default function App() {
           />
         )}
 
-        {/* TAB 3: ACR / PER Dossier Studio */}
+        {/* TAB 4: ACR / PER Dossier Studio */}
         {activeTab === 'acr' && (
           <AcrStudio
             officers={officers}
@@ -320,12 +494,12 @@ export default function App() {
           />
         )}
 
-        {/* TAB 4: Zone Statistical Analytics */}
+        {/* TAB 5: Zone Statistical Analytics */}
         {activeTab === 'analytics' && (
-          <ZoneAnalytics officers={officers} />
+          <ZoneAnalytics officers={officers} circles={circles} />
         )}
 
-        {/* TAB 5: Headquarters CMS Integration */}
+        {/* TAB 6: Headquarters CMS Integration */}
         {activeTab === 'hq-sync' && (
           <HqIntegrationStation
             officers={officers}
@@ -335,7 +509,7 @@ export default function App() {
           />
         )}
 
-        {/* TAB 6: Security & Audit Trail */}
+        {/* TAB 7: Security & Audit Trail */}
         {activeTab === 'audit' && (
           <SecurityAuditView
             auditLogs={auditLogs}
@@ -374,6 +548,7 @@ export default function App() {
         <NewOfficerModal
           onClose={() => setIsNewOfficerModalOpen(false)}
           onAddOfficer={handleAddOfficer}
+          circles={circles}
         />
       )}
 

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { 
   Officer, 
   ZoneExecutiveBrief, 
+  CircleDefinition,
   InvestigationMetrics, 
   AsiMetrics, 
   ConstabularyMetrics, 
@@ -38,22 +39,32 @@ import {
 
 interface ZoneAnalyticsProps {
   officers: Officer[];
+  circles?: CircleDefinition[];
 }
 
-export const ZoneAnalytics: React.FC<ZoneAnalyticsProps> = ({ officers }) => {
+export const ZoneAnalytics: React.FC<ZoneAnalyticsProps> = ({ officers, circles }) => {
   const [activeTab, setActiveTab] = useState<'OVERALL' | 'CIRCLES' | 'OFFICERS' | 'SHEETS'>('OVERALL');
   const [selectedCircle, setSelectedCircle] = useState<string>('ALL');
   const [selectedSheet, setSelectedSheet] = useState<string>('SUMMARY');
   const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
   const [executiveBrief, setExecutiveBrief] = useState<ZoneExecutiveBrief | null>(null);
 
-  const circlesList = useMemo(() => [
-    'Anti-Corruption Circle (ACC)',
-    'Cyber Crime Circle (CCC)',
-    'Anti-Human Trafficking Circle (AHTC)',
-    'Commercial Banking Circle (CBC)',
-    'Zone Legal & Prosecution Wing'
-  ], []);
+  const circlesList = useMemo(() => {
+    if (circles && circles.length > 0) {
+      return circles.map((c) => c.name);
+    }
+    const fromOfficers = Array.from(new Set(officers.map((o) => o.circle))).filter(Boolean);
+    return fromOfficers.length > 0
+      ? fromOfficers
+      : [
+          'Anti-Corruption Circle (ACC)',
+          'Cyber Crime Circle (CCC)',
+          'Anti-Human Trafficking Circle (AHTC)',
+          'Commercial Banking Circle (CBC)',
+          'Counter Terrorism Wing (CTW)',
+          'Zone Legal & Prosecution Wing'
+        ];
+  }, [circles, officers]);
 
   // Compute Overall Aggregate Statistics
   const overallStats = useMemo(() => {

@@ -21,7 +21,24 @@ export type Circle =
   | 'Anti-Human Trafficking Circle (AHTC)'
   | 'Commercial Banking Circle (CBC)'
   | 'Counter Terrorism Wing (CTW)'
-  | 'Zone Legal & Prosecution Wing';
+  | 'Zone Legal & Prosecution Wing'
+  | (string & {});
+
+export interface CircleDefinition {
+  id: string;
+  name: string;
+  code: string;
+  inchargeName: string;
+  inchargeRank: string;
+  inchargeOfficerId?: string;
+  jurisdiction: string;
+  headquarters: string;
+  contactNo: string;
+  securityClassification: 'RESTRICTED' | 'CONFIDENTIAL' | 'SECRET' | 'TOP SECRET';
+  establishedYear?: string;
+  description?: string;
+  isDefault?: boolean;
+}
 
 // Base conduct indicators common to all cadres
 export interface ConductRecognitionMetrics {

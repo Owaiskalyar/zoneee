@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { 
   Officer, 
   Cadre, 
+  CircleDefinition,
   InvestigationMetrics, 
   AsiMetrics, 
   ConstabularyMetrics, 
@@ -21,6 +22,7 @@ import {
 
 interface OfficerDirectoryProps {
   officers: Officer[];
+  circles?: CircleDefinition[];
   onSelectOfficer: (officer: Officer) => void;
   onOpenNewOfficerModal: () => void;
   onGenerateAcr: (officer: Officer) => void;
@@ -28,6 +30,7 @@ interface OfficerDirectoryProps {
 
 export const OfficerDirectory: React.FC<OfficerDirectoryProps> = ({
   officers,
+  circles,
   onSelectOfficer,
   onOpenNewOfficerModal,
   onGenerateAcr,
@@ -39,7 +42,10 @@ export const OfficerDirectory: React.FC<OfficerDirectoryProps> = ({
   const filteredOfficers = useMemo(() => {
     return officers.filter((officer) => {
       const matchesCadre = selectedCadre === 'ALL' || officer.cadre === selectedCadre;
-      const matchesCircle = selectedCircle === 'ALL' || officer.circle.includes(selectedCircle);
+      const matchesCircle = 
+        selectedCircle === 'ALL' || 
+        officer.circle === selectedCircle || 
+        officer.circle.toLowerCase().includes(selectedCircle.toLowerCase());
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch = 
         !query ||
@@ -80,11 +86,19 @@ export const OfficerDirectory: React.FC<OfficerDirectoryProps> = ({
               className="bg-slate-950 border border-slate-700 rounded-md px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
             >
               <option value="ALL">All Islamabad Circles / Wings</option>
-              <option value="Anti-Corruption">Anti-Corruption Circle (ACC)</option>
-              <option value="Cyber Crime">Cyber Crime Circle (CCC)</option>
-              <option value="Anti-Human Trafficking">Anti-Human Trafficking (AHTC)</option>
-              <option value="Commercial Banking">Commercial Banking (CBC)</option>
-              <option value="Legal & Prosecution">Legal & Prosecution Wing</option>
+              {circles && circles.length > 0 ? (
+                circles.map((c) => (
+                  <option key={c.id} value={c.name}>{c.name}</option>
+                ))
+              ) : (
+                <>
+                  <option value="Anti-Corruption Circle (ACC)">Anti-Corruption Circle (ACC)</option>
+                  <option value="Cyber Crime Circle (CCC)">Cyber Crime Circle (CCC)</option>
+                  <option value="Anti-Human Trafficking Circle (AHTC)">Anti-Human Trafficking (AHTC)</option>
+                  <option value="Commercial Banking Circle (CBC)">Commercial Banking (CBC)</option>
+                  <option value="Zone Legal & Prosecution Wing">Zone Legal & Prosecution Wing</option>
+                </>
+              )}
             </select>
 
             <button

@@ -70,6 +70,16 @@ export const Header: React.FC<HeaderProps> = ({
             Officer Records
           </button>
           <button
+            onClick={() => setActiveTab('circles')}
+            className={`transition-colors whitespace-nowrap py-1 border-b-2 ${
+              activeTab === 'circles'
+                ? 'text-amber-400 border-amber-400 font-semibold'
+                : 'border-transparent text-slate-300 hover:text-white'
+            }`}
+          >
+            Circle Wings
+          </button>
+          <button
             onClick={() => setActiveTab('roster')}
             className={`transition-colors whitespace-nowrap py-1 border-b-2 ${
               activeTab === 'roster'
@@ -161,6 +171,12 @@ export const Header: React.FC<HeaderProps> = ({
           className={`whitespace-nowrap pb-1 ${activeTab === 'officers' ? 'text-amber-400 font-semibold border-b-2 border-amber-400' : 'text-slate-400'}`}
         >
           Officers
+        </button>
+        <button
+          onClick={() => setActiveTab('circles')}
+          className={`whitespace-nowrap pb-1 ${activeTab === 'circles' ? 'text-amber-400 font-semibold border-b-2 border-amber-400' : 'text-slate-400'}`}
+        >
+          Circles
         </button>
         <button
           onClick={() => setActiveTab('roster')}
